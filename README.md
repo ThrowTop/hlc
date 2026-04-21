@@ -4,21 +4,16 @@ Lua helper library for Hyprland's Lua config API. The main thing it adds over th
 
 Requires Hyprland with Lua config support.
 
-## config
-
-Writes go to Hyprland immediately and update the mirror. All three forms below do the same thing:
-
 ```lua
 local hlc = require("hlc")
-
-hlc.config({ decoration = { rounding = 10 } })
-hlc.decoration = { rounding = 10 }
-hlc.decoration.rounding = 10
 ```
 
-Reads return whatever was last written:
+## config
+
+`hlc.decoration`, `hlc.config.decoration`, and `hlc.config({ decoration = {...} })` are all the same proxy. Writes go to Hyprland immediately and update the mirror:
 
 ```lua
+hlc.decoration.rounding = 10
 local r = hlc.decoration.rounding -- 10
 ```
 
