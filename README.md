@@ -1,6 +1,6 @@
 # hlc
 
-Lua helper library for Hyprland's Lua config API. The main thing it adds over the raw `hl.*` API is a readable config mirror — every write is reflected back so you can read current values without calling `hl.get_config()`.
+Lua helper library for Hyprland's Lua config API. The main thing it adds over the raw `hl.*` API is a readable config mirror. Every write is reflected back so you can read current values without calling `hl.get_config()`.
 
 Requires Hyprland with Lua config support.
 
@@ -25,7 +25,7 @@ tp.natural_scroll = true
 tp.disable_while_typing = true
 ```
 
-Call syntax does a partial write — only the given keys are touched:
+Call syntax does a partial write, only the given keys are touched:
 
 ```lua
 hlc.decoration.blur({ size = 12, passes = 3 })
@@ -54,7 +54,7 @@ hlc.animation.fade = { speed = 3, curve = ease }
 hlc.animation.windows.speed = 6
 ```
 
-`hlc.anim(speed, curve?, style?)` just builds the spec table — use it or don't.
+`hlc.anim(speed, curve?, style?)` just builds the spec table, use it or don't.
 
 Named curves register under that name in Hyprland:
 
