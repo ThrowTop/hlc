@@ -62,7 +62,7 @@ Named curves register under that name in Hyprland:
 local myease = hlc.curve("myease", 0.23, 1, 0.32, 1)
 ```
 
-Available styles: `popin(%)`, `slide(%)`, `slidevert()`, `fade()`, `gnome()`, `loop()`, `once()`
+Available styles: `popin(%)`, `slide(%)`, `slidevert()`, `fade()`, `gnome()`, `gnomed()`, `loop()`, `once()`
 
 ## gradients
 
