@@ -1,113 +1,82 @@
 # hlc
 
-A small Lua helper library for Hyprland's Lua config API. Wraps `hl.config()` behind a readable proxy so you can write and read config values naturally, and provides utilities for animations, curves, gradients, and notifications.
+Lua helper library for Hyprland's Lua config API. The main thing it adds over the raw `hl.*` API is a readable config mirror — every write is reflected back so you can read current values without calling `hl.get_config()`.
 
 Requires Hyprland with Lua config support.
 
 ## config
 
-`hlc.config` mirrors `hl.config()` but is readable and additive. Assignment, call syntax, and dot-access all write to Hyprland immediately and update the internal mirror.
+Writes go to Hyprland immediately and update the mirror. All three forms below do the same thing:
 
 ```lua
 local hlc = require("hlc")
 
-hlc.config({
-    general = {
-        gaps_in = 4,
-        gaps_out = 8,
-        border_size = 2,
-    },
-    decoration = {
-        rounding = 10,
-        blur = { enabled = true, size = 8, passes = 2 },
-    },
-})
+hlc.config({ decoration = { rounding = 10 } })
+hlc.decoration = { rounding = 10 }
+hlc.decoration.rounding = 10
+```
 
--- section shorthands work the same way
-hlc.decoration = {
-    inactive_opacity = 0.8,
-}
+Reads return whatever was last written:
 
--- partial write via call syntax — only touches the given keys
-hlc.decoration.blur({ size = 12, passes = 3 })
+```lua
+local r = hlc.decoration.rounding -- 10
+```
 
--- read a value back from the mirror
-local rounding = hlc.decoration.rounding -- returns 10
+Capture a sub-proxy to avoid repeating the path:
 
--- capture a sub-proxy to avoid repeating the path
+```lua
 local tp = hlc.config.input.touchpad
 tp.natural_scroll = true
 tp.disable_while_typing = true
 ```
 
-`hlc.decoration` and `hlc.config.decoration` are the same proxy.
+Call syntax does a partial write — only the given keys are touched:
+
+```lua
+hlc.decoration.blur({ size = 12, passes = 3 })
+```
 
 ## animations
 
-`hlc.animation` mirrors animation state. Writes apply to Hyprland immediately. You can set everything at once or individual leaves separately — both work.
+Leaf writes apply immediately. You can bulk-assign or set leaves individually:
 
 ```lua
 local ease   = hlc.curve(0.23, 1, 0.32, 1)
 local linear = hlc.curve(0, 0, 1, 1)
+local pop    = hlc.style.popin(85)
+local slide  = hlc.style.slide()
 
 hlc.animation = {
     global     = { speed = 8 },
     windows    = { speed = 4, curve = ease },
-    windowsOut = { speed = 2, curve = linear, style = hlc.style.popin(85) },
-    workspaces = { speed = 3, curve = ease,   style = hlc.style.slide() },
+    windowsIn  = hlc.anim(3.5, ease, pop),
+    windowsOut = { speed = 2, curve = linear, style = pop },
+    workspaces = hlc.anim(3, ease, slide),
 }
 
--- set leaves individually outside the table
+-- set later, applies immediately
 hlc.animation.fade = { speed = 3, curve = ease }
-
--- or write a single field
 hlc.animation.windows.speed = 6
 ```
 
-`hlc.anim(speed, curve?, style?)` is a shorthand for building the spec table:
+`hlc.anim(speed, curve?, style?)` just builds the spec table — use it or don't.
+
+Named curves register under that name in Hyprland:
 
 ```lua
-hlc.animation.windowsIn = hlc.anim(3.5, ease, hlc.style.popin(85))
+local myease = hlc.curve("myease", 0.23, 1, 0.32, 1)
 ```
 
-### curves
-
-```lua
-local ease = hlc.curve(0.23, 1, 0.32, 1)         -- anonymous
-local named = hlc.curve("myease", 0.23, 1, 0.32, 1) -- registers under that name in Hyprland
-```
-
-### styles
-
-```lua
-hlc.style.popin(85)   -- popin 85%
-hlc.style.slide()
-hlc.style.fade()
-hlc.style.slidevert()
-```
+Available styles: `popin(%)`, `slide(%)`, `slidevert()`, `fade()`, `gnome()`, `loop()`, `once()`
 
 ## gradients
 
 ```lua
-hlc.general.col.active_border = hlc.gradient("rgb(B4BEFE)", "rgb(89B4FA)", 45)
--- or as a raw table
+hlc.general.col.active_border   = hlc.gradient("rgb(B4BEFE)", "rgb(89B4FA)", 45)
 hlc.general.col.inactive_border = { colors = { "rgb(313244)" } }
 ```
 
-## misc
-
-```lua
--- wraps hl.exec_once, accepts multiple strings
-hlc.exec_once("waybar", "hyprpaper", "hypridle")
-
--- wraps hl.notification.create, timeout defaults to 2000ms
-hlc.notify("hello")
-hlc.notify("something", 1000)
-```
-
 ## reading config in keybinds
-
-Since the mirror is readable, you can use config values in `hl.bind` callbacks:
 
 ```lua
 hl.bind("SUPER + SHIFT + R", function()
@@ -120,4 +89,12 @@ hl.bind("SUPER + SHIFT + A", function()
     hlc.animations.enabled = not hlc.animations.enabled
     hlc.notify("animations: " .. (hlc.animations.enabled and "on" or "off"), 1500)
 end)
+```
+
+## misc
+
+```lua
+hlc.exec_once("waybar", "hyprpaper", "hypridle") -- accepts multiple strings
+hlc.notify("hello")
+hlc.notify("hello", 1000) -- timeout in ms, default 2000
 ```
