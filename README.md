@@ -33,6 +33,7 @@ hlc.decoration.blur({ size = 12, passes = 3 })
 
 ## animations
 
+Most of this stuff is made to avoid nested tables of arbitrary strings.
 Leaf writes apply immediately. You can bulk-assign or set leaves individually:
 
 ```lua
