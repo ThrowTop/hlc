@@ -89,7 +89,6 @@ end)
 ## misc
 
 ```lua
-hlc.exec_once("waybar", "hyprpaper", "hypridle") -- accepts multiple strings
 hlc.notify("hello")
 hlc.notify("hello", 1000) -- timeout in ms, default 2000
 ```
