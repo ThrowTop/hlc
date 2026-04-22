@@ -1,11 +1,16 @@
 -- hlc — readable wrappers around the Hyprland Lua API.
-
 local M = {}
 
 -- types
 
 ---@class HLC.Curve
 ---@class HLC.Style
+
+---@class HLC.NotifyOptions
+---@field timeout?   integer
+---@field icon?      string|integer
+---@field color?     string|integer
+---@field font_size? number
 
 ---@class HLC.Gradient
 ---@field colors string[]
@@ -109,8 +114,7 @@ local M = {}
 ---@field animation   HLC.AnimationProxy
 ---@field anim        fun(speed: number, curve?: HLC.Curve|string, style?: HLC.Style|string): HLC.AnimationSpec
 ---@field gradient    fun(...): HLC.Gradient
----@field notify      fun(text: string, timeout?: integer): nil
----@field exec_once   fun(...: string): nil
+---@field notify      fun(text: string, opts?: integer|HLC.NotifyOptions): nil
 ---@field general     HLC.ConfigProxy
 ---@field decoration  HLC.ConfigProxy
 ---@field input       HLC.ConfigProxy
@@ -512,8 +516,12 @@ M.animation = animation_proxy
 ---@return HLC.AnimationSpec
 function M.anim(speed, curve, style)
     local t = { speed = speed }
-    if curve then t.curve = curve end
-    if style then t.style = style end
+    if curve then
+        t.curve = curve
+    end
+    if style then
+        t.style = style
+    end
     return t
 end
 
@@ -536,19 +544,21 @@ end
 
 -- notify
 
----@param text    string
----@param timeout? integer  milliseconds, default 2000
-function M.notify(text, timeout)
-    hl.notification.create({ text = tostring(text), timeout = timeout or 2000 })
-end
-
--- exec_once
-
----@param ... string
-function M.exec_once(...)
-    for _, cmd in ipairs({ ... }) do
-        hl.exec_once(cmd)
+---@param text string
+---@param opts? integer|HLC.NotifyOptions  timeout in ms, or options table. default 2000ms
+function M.notify(text, opts)
+    local t = { text = tostring(text) }
+    if type(opts) == "number" then
+        t.timeout = opts
+    elseif type(opts) == "table" then
+        t.timeout = opts.timeout
+        t.icon = opts.icon
+        t.color = opts.color
+        t.font_size = opts.font_size
     end
+    t.timeout = t.timeout or 2000
+    t.icon = t.icon or "ok"
+    hl.notification.create(t)
 end
 
 -- export
@@ -602,6 +612,8 @@ local _export = setmetatable({}, {
         error(string.format("hlc: cannot assign to hlc.%s", tostring(k)), 2)
     end,
 })
+
+-- apparently lsp and autocomplete doesnt work if i return the metatable directly.
 return _export
 
 
