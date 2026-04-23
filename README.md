@@ -3,6 +3,10 @@
 Lua helper library for Hyprland's Lua config API. The main thing it adds over the raw `hl.*` API is a readable config mirror. Every write is reflected back so you can read current values without calling `hl.get_config()`.
 
 Requires Hyprland with Lua config support.
+Oneliner install:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ThrowTop/hlc/master/hlc.lua -o ~/.config/hypr/hlc.lua
+```
 
 ```lua
 local hlc = require("hlc")
