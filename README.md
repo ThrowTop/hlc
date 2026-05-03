@@ -5,7 +5,7 @@ Lua helper library for Hyprland's Lua config API.
 - Readable config mirror, every write is reflected back, no need for `hl.get_config()`
 - Bezier and spring curve constructors
 - Animation proxy, leaf writes apply immediately
-- Dispatcher shortcuts, all `hl.dsp.*` dispatchers available as `hlc.*` and auto-dispatched
+- Dispatcher shortcuts, all `hl.dsp.*` dispatchers available as `hlc.d.*` and auto-dispatched
 
 Requires Hyprland with Lua config support.
 
@@ -38,13 +38,19 @@ tp.natural_scroll = true
 tp.disable_while_typing = true
 ```
 
-Call syntax does a partial write, only the given keys are touched:
+Only partial write, only the given keys are touched:
 
 ```lua
+--identical
 hlc.decoration.blur({ size = 12, passes = 3 })
+hlc.decoration.blur = { size = 12, passes = 3 }
+
+--identical
+hlc.decoration = { inactive_opacity = 0.9 }
+hlc.decoration.inactive_opacity = 0.9
 ```
 
-Bulk write via `hlc.config(...)` or direct section assignment:
+Bulk write via `hlc.config({...})`, identical to hl.config({}) or direct section assignment:
 
 ```lua
 hlc.config({
@@ -52,8 +58,6 @@ hlc.config({
     decoration = { rounding = 12 },
     misc = { disable_hyprland_logo = true },
 })
-
-hlc.decoration = { inactive_opacity = 0.9 }
 ```
 
 ## curves
