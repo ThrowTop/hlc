@@ -151,19 +151,19 @@ hlc.notify("hello", {
 
 ## dispatchers
 
-All `hl.dsp.*` dispatchers are available directly on `hlc` and execute immediately. Useful inside event handlers and callbacks where you want to fire a dispatch rather than return a dispatcher.
+All `hl.dsp.*` dispatchers are available on `hlc.d` and execute immediately. Useful inside event handlers and callbacks where you want to fire a dispatch rather than return a dispatcher.
 
-`hlc.focus(...)` is equivalent to `hl.dispatch(hl.dsp.focus(...))`, and so on for every dispatcher.
+`hlc.d.focus(...)` is equivalent to `hl.dispatch(hl.dsp.focus(...))`, and so on for every dispatcher.
 
 ```lua
-hlc.exec_cmd("kitty")
-hlc.focus({ window = "address:0x..." })
-hlc.window.close()
-hlc.window.move({ workspace = "2" })
-hlc.window.resize({ x = 100, y = 0, relative = true })
-hlc.window.pin({ action = "enable", window = addr })
-hlc.submap("reset")
-hlc.exit()
+hlc.d.exec_cmd("kitty")
+hlc.d.focus({ window = "address:0x..." })
+hlc.d.window.close()
+hlc.d.window.move({ workspace = "2" })
+hlc.d.window.resize({ x = 100, y = 0, relative = true })
+hlc.d.window.pin({ action = "enable", window = addr })
+hlc.d.submap("reset")
+hlc.d.exit()
 ```
 
 For keybinds, pass `hl.dsp.*` dispatchers as usual, those are lazy and executed by Hyprland when the key is pressed:
@@ -174,16 +174,16 @@ hl.bind("SUPER + Q",      hl.dsp.window.close())
 hl.bind("SUPER + H",      hl.dsp.focus({ direction = "left" }))
 ```
 
-Use `hlc.*` dispatchers when you need to fire immediately, for example in `hl.on` event handlers or inside `hl.bind` function callbacks:
+Use `hlc.d.*` dispatchers when you need to fire immediately, for example in `hl.on` event handlers or inside `hl.bind` function callbacks:
 
 ```lua
 hl.on("hyprland.start", function()
-    hlc.exec_cmd("waybar")
-    hlc.exec_cmd("hyprpaper")
+    hlc.d.exec_cmd("waybar")
+    hlc.d.exec_cmd("hyprpaper")
 end)
 
 hl.bind("SUPER + SHIFT + R", function()
-    hlc.window.move({ workspace = "special:scratch" })
+    hlc.d.window.move({ workspace = "special:scratch" })
 end)
 ```
 
