@@ -4,6 +4,9 @@ local M = {}
 -- types
 
 ---@class HLC.Curve
+---@field _name string
+---@field _type "bezier"|"spring"
+
 ---@class HLC.Style
 
 ---@class HLC.NotifyOptions
@@ -109,7 +112,9 @@ local M = {}
 
 ---@class HLC.Module
 ---@field config      HLC.ConfigProxy
----@field curve       fun(a: string|number, b: number, c: number, d: number, e?: number): HLC.Curve
+---@field bezier      fun(x1: number, y1: number, x2: number, y2: number, name?: string): HLC.Curve
+---@field spring      fun(mass: number, stiffness: number, dampening: number, name?: string): HLC.Curve
+---@field curve       fun(x1: number, y1: number, x2: number, y2: number, name?: string): HLC.Curve
 ---@field style       HLC.StyleFactory
 ---@field animation   HLC.AnimationProxy
 ---@field anim        fun(speed: number, curve?: HLC.Curve|string, style?: HLC.Style|string): HLC.AnimationSpec
@@ -257,36 +262,56 @@ local curve_counter = 0
 
 local function validate_coord(label, v)
     if type(v) ~= "number" then
-        error("hlc.curve: " .. label .. " must be a number", 3)
+        error("hlc.bezier: " .. label .. " must be a number", 3)
     end
     if v < -1 or v > 2 then
-        error("hlc.curve: " .. label .. " must be in [-1, 2]", 3)
+        error("hlc.bezier: " .. label .. " must be in [-1, 2]", 3)
     end
 end
 
----@overload fun(x1: number, y1: number, x2: number, y2: number): HLC.Curve
----@param  name string
+local function validate_spring(label, v)
+    if type(v) ~= "number" or v <= 0 then
+        error("hlc.spring: " .. label .. " must be a positive number", 3)
+    end
+end
+
 ---@param  x1   number
 ---@param  y1   number
 ---@param  x2   number
 ---@param  y2   number
+---@param  name? string
 ---@return HLC.Curve
-function M.curve(name, x1, y1, x2, y2)
-    local a, b, c, d, e = name, x1, y1, x2, y2
-    if type(a) == "string" then
-        name, x1, y1, x2, y2 = a, b, c, d, e
-    else
+function M.bezier(x1, y1, x2, y2, name)
+    if name == nil then
         curve_counter = curve_counter + 1
         name = string.format("hlc_curve_%d", curve_counter)
-        x1, y1, x2, y2 = a, b, c, d
     end
     validate_coord("x1", x1)
     validate_coord("y1", y1)
     validate_coord("x2", x2)
     validate_coord("y2", y2)
     hl.curve(name, { type = "bezier", points = { { x1, y1 }, { x2, y2 } } })
-    return setmetatable({ _name = name }, curve_mt)
+    return setmetatable({ _name = name, _type = "bezier" }, curve_mt)
 end
+
+---@param  mass      number
+---@param  stiffness number
+---@param  dampening number
+---@param  name?     string
+---@return HLC.Curve
+function M.spring(mass, stiffness, dampening, name)
+    if name == nil then
+        curve_counter = curve_counter + 1
+        name = string.format("hlc_curve_%d", curve_counter)
+    end
+    validate_spring("mass", mass)
+    validate_spring("stiffness", stiffness)
+    validate_spring("dampening", dampening)
+    hl.curve(name, { type = "spring", mass = mass, stiffness = stiffness, dampening = dampening })
+    return setmetatable({ _name = name, _type = "spring" }, curve_mt)
+end
+
+M.curve = M.bezier
 
 local function resolve_curve(c)
     if c == nil then
@@ -410,13 +435,20 @@ end
 
 local anim_state = {}
 
+local function curve_key(c)
+    if getmetatable(c) == curve_mt and rawget(c, "_type") == "spring" then
+        return "spring"
+    end
+    return "bezier"
+end
+
 local function apply_animation(leaf)
     local s = anim_state[leaf]
     local spec = {
         leaf = leaf,
         enabled = s.enabled,
         speed = s.speed,
-        bezier = resolve_curve(s.curve),
+        [curve_key(s.curve)] = resolve_curve(s.curve),
     }
     local str = resolve_style(s.style)
     if str then
@@ -561,6 +593,24 @@ function M.notify(text, opts)
     hl.notification.create(t)
 end
 
+-- dispatch
+
+local function wrap_dsp(dsp)
+    local t = {}
+    for k, v in pairs(dsp) do
+        if type(v) == "function" then
+            t[k] = function(...)
+                hl.dispatch(v(...))
+            end
+        elseif type(v) == "table" then
+            t[k] = wrap_dsp(v)
+        end
+    end
+    return t
+end
+
+local _dispatchers = wrap_dsp(hl.dsp)
+
 -- export
 
 local CONFIG_SECTIONS = {
@@ -595,6 +645,7 @@ local _export = setmetatable({}, {
         if CONFIG_SECTIONS[k] then
             return M.config[k]
         end
+        return _dispatchers[k]
     end,
     __newindex = function(_, k, v)
         if k == "animation" then
