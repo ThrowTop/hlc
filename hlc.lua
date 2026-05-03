@@ -112,6 +112,7 @@ local M = {}
 
 ---@class HLC.Module
 ---@field config      HLC.ConfigProxy
+---@field d           table
 ---@field bezier      fun(x1: number, y1: number, x2: number, y2: number, name?: string): HLC.Curve
 ---@field spring      fun(mass: number, stiffness: number, dampening: number, name?: string): HLC.Curve
 ---@field curve       fun(x1: number, y1: number, x2: number, y2: number, name?: string): HLC.Curve
@@ -609,7 +610,7 @@ local function wrap_dsp(dsp)
     return t
 end
 
-local _dispatchers = wrap_dsp(hl.dsp)
+M.d = wrap_dsp(hl.dsp)
 
 -- export
 
@@ -645,7 +646,6 @@ local _export = setmetatable({}, {
         if CONFIG_SECTIONS[k] then
             return M.config[k]
         end
-        return _dispatchers[k]
     end,
     __newindex = function(_, k, v)
         if k == "animation" then

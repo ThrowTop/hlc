@@ -95,12 +95,13 @@ hlc.animation = {
     global      = { speed = 10 },
     windows     = { speed = 5, curve = snap },
     windowsIn   = { speed = 4, curve = snap, style = pop },
-    windowsOut  = { speed = 2, curve = hlc.bezier(0, 0, 1, 1), style = pop },
+    windowsOut  = { speed = 2, curve = snap, style = pop },
     workspaces  = { speed = 4, curve = ease, style = slide },
     layers      = { speed = 4, curve = snap },
     layersIn    = { speed = 4, curve = snap, style = fade },
-    layersOut   = { speed = 2, curve = hlc.bezier(0, 0, 1, 1), style = fade },
-    fade        = { speed = 3, curve = hlc.bezier(0.15, 0, 0.1, 1) },
+    layersOut   = { speed = 2, curve = ease, style = fade },
+    -- curve can also be a raw string using the Hyprland curve name directly
+    fade        = { speed = 3, curve = "linear" },
 }
 
 -- individual leaf, applies immediately
@@ -108,10 +109,12 @@ hlc.animation.border = { speed = 5, curve = ease }
 hlc.animation.windows.speed = 6
 ```
 
-`hlc.anim(speed, curve?, style?)` is shorthand for building a spec table:
+`hlc.anim(speed, curve?, style?)` is a table factory, identical to writing the table by hand. Use whichever reads better:
 
 ```lua
-windowsIn = hlc.anim(4, snap, pop),
+-- these are equivalent
+windowsIn = { speed = 4, curve = snap, style = pop }
+windowsIn = hlc.anim(4, snap, pop)
 ```
 
 ### styles
