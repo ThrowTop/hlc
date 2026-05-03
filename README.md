@@ -94,10 +94,10 @@ local fade  = hlc.style.fade()
 hlc.animation = {
     global      = { speed = 10 },
     windows     = { speed = 5, curve = snap },
-    windowsIn   = { speed = 4, curve = snap, style = pop },
+    windowsIn   = hlc.anim(4, snap, pop),
     windowsOut  = { speed = 2, curve = snap, style = pop },
-    workspaces  = { speed = 4, curve = ease, style = slide },
-    layers      = { speed = 4, curve = snap },
+    workspaces  = hlc.anim(4, ease, slide),
+    layers      = hlc.anim(4, snap),
     layersIn    = { speed = 4, curve = snap, style = fade },
     layersOut   = { speed = 2, curve = ease, style = fade },
     -- curve can also be a raw string using the Hyprland curve name directly
