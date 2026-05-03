@@ -630,10 +630,10 @@ function M.exec_async(cmd, callback, opts)
         callback({ stdout = nil, code = -1 })
         return
     end
-    f:write(string.format("#!/bin/sh\n%s > %s 2>&1\necho $? > %s\n", cmd, out_file, don_file))
+    f:write(string.format("#!/bin/bash\n%s > %s 2>&1\necho $? > %s\n", cmd, out_file, don_file))
     f:close()
 
-    hl.exec_cmd("sh " .. sh_file)
+    hl.exec_cmd("bash " .. sh_file)
 
     local timer
     timer = hl.timer(function()
