@@ -117,6 +117,15 @@ windowsIn = { speed = 4, curve = snap, style = pop }
 windowsIn = hlc.anim(4, snap, pop)
 ```
 
+When using a raw Hyprland curve name string, use `bezier` or `spring` explicitly so hlc knows which field to pass to the API:
+
+```lua
+windowsIn = { speed = 4, bezier = "myease",   style = pop }
+layersIn  = { speed = 4, spring = "myspring",  style = fade }
+```
+
+`curve` accepts both hlc curve objects and strings, but a string has no type information so it defaults to `bezier`. Use the explicit fields when you need spring by name.
+
 ### styles
 
 | Constructor             | Description                  |

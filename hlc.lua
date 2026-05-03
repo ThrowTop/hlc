@@ -33,6 +33,8 @@ local M = {}
 ---@field enabled? boolean
 ---@field speed?   number
 ---@field curve?   HLC.Curve|string
+---@field bezier?  string
+---@field spring?  string
 ---@field style?   HLC.Style|string
 
 ---@class HLC.AnimationLeafProxy : HLC.AnimationSpec
@@ -449,8 +451,16 @@ local function apply_animation(leaf)
         leaf = leaf,
         enabled = s.enabled,
         speed = s.speed,
-        [curve_key(s.curve)] = resolve_curve(s.curve),
     }
+    if s.curve ~= nil then
+        spec[curve_key(s.curve)] = resolve_curve(s.curve)
+    elseif s.spring ~= nil then
+        spec.spring = s.spring
+    elseif s.bezier ~= nil then
+        spec.bezier = s.bezier
+    else
+        spec.bezier = "default"
+    end
     local str = resolve_style(s.style)
     if str then
         spec.style = str
@@ -470,7 +480,7 @@ local function normalise_animation(leaf, spec)
     if enabled and (type(speed) ~= "number" or speed <= 0) then
         error(string.format("hlc.animation.%s: speed must be > 0 when enabled", leaf), 3)
     end
-    return { enabled = enabled, speed = speed, curve = spec.curve, style = spec.style }
+    return { enabled = enabled, speed = speed, curve = spec.curve, bezier = spec.bezier, spring = spec.spring, style = spec.style }
 end
 
 local leaf_mt = {}
