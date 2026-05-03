@@ -1,4 +1,4 @@
--- hlc — readable wrappers around the Hyprland Lua API.
+-- hlc - readable wrappers around the Hyprland Lua API.
 local M = {}
 
 -- types
