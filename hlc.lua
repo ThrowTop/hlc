@@ -29,6 +29,10 @@ local M = {}
 ---@field loop      fun(): HLC.Style
 ---@field once      fun(): HLC.Style
 
+---@class HLC.ExecResult
+---@field stdout string|nil
+---@field code   integer
+
 ---@class HLC.AnimationSpec
 ---@field enabled? boolean
 ---@field speed?   number
@@ -123,6 +127,8 @@ local M = {}
 ---@field anim        fun(speed: number, curve?: HLC.Curve|string, style?: HLC.Style|string): HLC.AnimationSpec
 ---@field gradient    fun(...): HLC.Gradient
 ---@field notify      fun(text: string, opts?: integer|HLC.NotifyOptions): nil
+---@field exec_async  fun(cmd: string, callback: fun(result: HLC.ExecResult), opts?: { interval?: integer }): nil
+---@field exec_sync   fun(cmd: string): string|nil
 ---@field general     HLC.ConfigProxy
 ---@field decoration  HLC.ConfigProxy
 ---@field input       HLC.ConfigProxy
@@ -602,6 +608,66 @@ function M.notify(text, opts)
     t.timeout = t.timeout or 2000
     t.icon = t.icon or "ok"
     hl.notification.create(t)
+end
+
+-- exec
+
+local _exec_id = 0
+
+---@param cmd      string
+---@param callback fun(result: HLC.ExecResult): nil
+---@param opts?    { interval?: integer }
+function M.exec_async(cmd, callback, opts)
+    _exec_id = _exec_id + 1
+    local id       = string.format("%d_%d", os.time(), _exec_id)
+    local sh_file  = string.format("/tmp/hlc_%s.sh",   id)
+    local out_file = string.format("/tmp/hlc_%s.out",  id)
+    local don_file = string.format("/tmp/hlc_%s.done", id)
+    local interval = (opts and opts.interval) or 100
+
+    local f = io.open(sh_file, "w")
+    if not f then
+        callback({ stdout = nil, code = -1 })
+        return
+    end
+    f:write(string.format("#!/bin/sh\n%s > %s 2>&1\necho $? > %s\n", cmd, out_file, don_file))
+    f:close()
+
+    hl.exec_cmd("sh " .. sh_file)
+
+    local timer
+    timer = hl.timer(function()
+        local df = io.open(don_file, "r")
+        if not df then return end
+        local code_str = df:read("*l")
+        df:close()
+
+        timer:set_enabled(false)
+
+        local stdout
+        local of = io.open(out_file, "r")
+        if of then
+            local s = of:read("*a"):gsub("%s+$", "")
+            of:close()
+            stdout = s ~= "" and s or nil
+        end
+
+        os.remove(sh_file)
+        os.remove(out_file)
+        os.remove(don_file)
+
+        callback({ stdout = stdout, code = tonumber(code_str) or -1 })
+    end, { timeout = interval, type = "repeat" })
+end
+
+---@param  cmd string
+---@return string|nil
+function M.exec_sync(cmd)
+    local f = io.popen(cmd)
+    if not f then return nil end
+    local s = f:read("*a"):gsub("%s+$", "")
+    f:close()
+    return s ~= "" and s or nil
 end
 
 -- dispatch

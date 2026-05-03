@@ -165,6 +165,37 @@ hlc.notify("hello", {
 })
 ```
 
+## exec
+
+`hlc.exec_async(cmd, callback, opts?)` runs a command without blocking. The callback receives a result table with `stdout` (string or nil) and `code` (exit code integer). Optional `opts.interval` controls how often hlc polls for completion in ms, default 100.
+
+```lua
+hlc.exec_async("brightnessctl get", function(result)
+    hlc.notify("brightness: " .. (result.stdout or "?"))
+end)
+
+-- check exit code
+hlc.exec_async("systemctl is-active pipewire", function(result)
+    if result.code == 0 then
+        hlc.notify("pipewire is running")
+    end
+end)
+
+-- custom poll interval
+hlc.exec_async("slow-command", function(result)
+    hlc.notify("done: " .. (result.stdout or ""))
+end, { interval = 500 })
+```
+
+`hlc.exec_sync(cmd)` blocks until the command exits and returns stdout as a string, or nil if empty.
+
+```lua
+local out = hlc.exec_sync("brightnessctl get")
+hlc.notify("brightness: " .. (out or "?"))
+```
+
+Use `exec_async` wherever possible. `exec_sync` blocks the compositor for the duration of the command.
+
 ## dispatchers
 
 All `hl.dsp.*` dispatchers are available on `hlc.d` and execute immediately. Useful inside event handlers and callbacks where you want to fire a dispatch rather than return a dispatcher.
