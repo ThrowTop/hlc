@@ -138,8 +138,7 @@ layersIn  = { speed = 4, spring = "myspring",  style = fade }
 | `hlc.style.slide(%)`    | Slide in (optional offset %) |
 | `hlc.style.slidevert()` | Slide in vertically          |
 | `hlc.style.fade()`      | Fade                         |
-| `hlc.style.gnome()`     | GNOME-style                  |
-| `hlc.style.gnomed()`    | GNOME-style (reversed)       |
+| `hlc.style.gnomed()`    | GNOMED                       |
 | `hlc.style.loop()`      | Loop                         |
 | `hlc.style.once()`      | Play once                    |
 
